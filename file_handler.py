@@ -47,31 +47,41 @@ def compute_estimated_test_date(df: pd.DataFrame) -> pd.DataFrame:
     except Exception as e:
         return pd.DataFrame({"错误信息": [str(e)]})
 
-def append_df_to_original_excel(original_file, new_df, new_sheet_name="提取结果") -> BytesIO:
+from openpyxl import load_workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+from io import BytesIO
+import pandas as pd
+
+def update_existing_sheet_with_estimates(uploaded_file, df_with_estimates, start_col_letter="AC"):
     """
-    将新数据添加为原 Excel 文件中的一个新工作表，并返回内存中的 BytesIO 对象。
+    在原始 Excel 的 Sheet1 上追加两列：预估开始测试日期、结束日期，保持样式。
     
     参数:
-    - original_file: Streamlit 上传的文件对象
-    - new_df: 需追加写入的新 DataFrame
-    - new_sheet_name: 新工作表名
-    
+        uploaded_file: Streamlit 上传文件
+        df_with_estimates: 已经包含新字段的 pandas DataFrame
+        start_col_letter: 从哪个 Excel 列开始插入（默认 AC 即第29列）
+
     返回:
-    - BytesIO: 包含原始内容 + 新工作表 的 Excel 文件对象
+        BytesIO: 带格式的新 Excel 文件
     """
-    # 读入原始 Excel 的全部内容
-    original_excel = pd.ExcelFile(original_file)
+    wb = load_workbook(uploaded_file)
+    ws = wb["Sheet1"]
+
+    # 找出要写入的列（Excel 第6行是表头）
+    headers = df_with_estimates.columns.tolist()
+    estimate_cols = ["预估开始测试日期", "结束日期"]
+
+    for i, col_name in enumerate(estimate_cols):
+        ws.cell(row=5, column=29 + i, value=col_name)  # 表头行（第6行）- openpyxl从1开始
+
+    # 从第7行开始写数据（即DataFrame中第1行）
+    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=6):
+        for i, col_name in enumerate(estimate_cols):
+            value = getattr(row, col_name, "")
+            ws.cell(row=row_idx, column=29 + i, value=value)
+
+    # 保存为 BytesIO 对象
     output = BytesIO()
-
-    with pd.ExcelWriter(output, engine="openpyxl", mode="w") as writer:
-        # 将原有 sheet 写入
-        for sheet_name in original_excel.sheet_names:
-            df_sheet = original_excel.parse(sheet_name)
-            df_sheet.to_excel(writer, sheet_name=sheet_name, index=False)
-
-        # 写入新提取 sheet
-        new_df.to_excel(writer, sheet_name=new_sheet_name, index=False)
-
+    wb.save(output)
     output.seek(0)
     return output
-
