@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 from ui import setup_sidebar, upload_excel_file
-from file_handler import extract_order_info, compute_estimated_test_date, append_df_to_original_excel
+from file_handler import extract_order_info, compute_estimated_test_date, update_existing_sheet_with_estimates
 
 
 st.set_page_config(page_title="订单信息提取", layout="wide")  # ✅ 最上方
@@ -20,16 +20,14 @@ def main():
             st.write("✅ 提取并计算结果：")
             st.dataframe(df_info)
     
-            # ✅ 生成带原始数据的新 Excel 文件
-            new_excel_bytes = append_df_to_original_excel(uploaded_file, df_info, new_sheet_name="提取结果")
+            updated_file = update_existing_sheet_with_estimates(uploaded_file, df_info)
     
             st.download_button(
-                label="📥 下载含提取结果的完整 Excel",
-                data=new_excel_bytes,
-                file_name="提取结果_完整版本.xlsx",
+                label="📥 下载更新后的原始 Excel",
+                data=updated_file,
+                file_name="更新后的封装表.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-
 
 if __name__ == "__main__":
     main()
