@@ -96,10 +96,10 @@ def update_existing_sheet_with_estimates(uploaded_file, df_with_estimates, start
     estimate_cols = ["预估开始测试日期", "结束日期"]
 
     for i, col_name in enumerate(estimate_cols):
-        ws.cell(row=5, column=29 + i, value=col_name)  # 表头行（第6行）- openpyxl从1开始
+        ws.cell(row=4, column=29 + i, value=col_name)  # 表头行（第5行）- openpyxl从1开始
 
     # 从第7行开始写数据（即DataFrame中第1行）
-    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=6):
+    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=5):
         for i, col_name in enumerate(estimate_cols):
             value = getattr(row, col_name, "")
             ws.cell(row=row_idx, column=29 + i, value=value)
