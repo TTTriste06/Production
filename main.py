@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 from ui import setup_sidebar, upload_excel_file
 from file_handler import extract_order_info, compute_estimated_test_date
