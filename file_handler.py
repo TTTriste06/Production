@@ -1,4 +1,5 @@
 import pandas as pd
+import streamlit as st
 
 TARGET_COLUMNS = [
     "订单号", "封装厂", "封装形式", "wafer in", "需排产",
@@ -16,6 +17,8 @@ def read_excel_file(uploaded_file):
             if matching_columns:
                 selected_df = df[matching_columns].copy()
                 selected_data[sheet_name] = selected_df
+
+        st.write(selected_data)
 
         return selected_data if selected_data else {"提示": pd.DataFrame({"信息": ["未在文件中找到目标字段"]})}
 
