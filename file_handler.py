@@ -36,9 +36,9 @@ def compute_estimated_test_date(df: pd.DataFrame) -> pd.DataFrame:
     """
     try:
         df = df.copy()
-        df["wafer in"] = pd.to_datetime(df["wafer in"], errors="coerce")
+        df["waferin"] = pd.to_datetime(df["waferin"], errors="coerce")
         df["总周期"] = df[["排产周期", "磨划周期", "封装周期"]].sum(axis=1, skipna=True)
-        df["预估开始测试日期"] = df["wafer in"] + pd.to_timedelta(df["总周期"], unit="D")
+        df["预估开始测试日期"] = df["waferin"] + pd.to_timedelta(df["总周期"], unit="D")
         df["结束日期"] = df["预估开始测试日期"]  # 占位（你可修改逻辑）
         return df
     except Exception as e:
