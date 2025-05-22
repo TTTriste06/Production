@@ -9,9 +9,11 @@ def main():
     uploaded_file = upload_excel_file()
 
     if uploaded_file:
-        extracted_df = extract_target_fields_from_sheet1(uploaded_file)
-        st.write("✅ 提取结果：")
-        st.write(extracted_df)
+        generate = st.button("📥 生成订单信息")
+        if generate:
+            extracted_df = extract_target_fields_from_sheet1(uploaded_file)
+            st.write("✅ 提取结果：")
+            st.write(extracted_df)
 
 if __name__ == "__main__":
     main()
