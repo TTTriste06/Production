@@ -1,23 +1,14 @@
 import streamlit as st
-import pandas as pd
-from io import BytesIO
+from ui import setup_sidebar, upload_excel_file
 from file_handler import extract_order_info, compute_estimated_test_date
 
-# ✅ 必须放在最前面
-st.set_page_config(page_title="订单信息提取", layout="wide")
-
-def to_excel(df: pd.DataFrame) -> BytesIO:
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name="订单信息")
-    output.seek(0)
-    return output
+st.set_page_config(page_title="订单信息提取", layout="wide")  # ✅ 最上方
 
 def main():
-    st.sidebar.title("📊 Excel 工具")
-    st.sidebar.markdown("上传封装交付表 → 提取 → 生成 → 下载")
+    setup_sidebar()
 
-    uploaded_file = st.file_uploader("📤 上传 Excel 文件", type=["xlsx"])
+    # ✅ 一开始就显示
+    uploaded_file = upload_excel_file()
 
     if uploaded_file:
         if st.button("📥 生成订单信息"):
@@ -27,7 +18,14 @@ def main():
             st.write("✅ 提取并计算结果：")
             st.dataframe(df_info)
 
-            # 导出为 Excel 并生成下载链接
+            from io import BytesIO
+            def to_excel(df):
+                output = BytesIO()
+                with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                    df.to_excel(writer, index=False, sheet_name="订单信息")
+                output.seek(0)
+                return output
+
             excel_bytes = to_excel(df_info)
             st.download_button(
                 label="📥 下载生成的 Excel 文件",
