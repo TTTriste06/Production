@@ -83,7 +83,7 @@ def update_existing_sheet_with_estimates(uploaded_file, df_with_estimates, start
     参数:
         uploaded_file: Streamlit 上传文件
         df_with_estimates: 已经包含新字段的 pandas DataFrame
-        start_col_letter: 从哪个 Excel 列开始插入（默认 AC 即第29列）
+        start_col_letter: 从哪个 Excel 列开始插入（默认 Y 即第25列）
 
     返回:
         BytesIO: 带格式的新 Excel 文件
@@ -102,7 +102,7 @@ def update_existing_sheet_with_estimates(uploaded_file, df_with_estimates, start
     for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=5):
         for i, col_name in enumerate(estimate_cols):
             value = getattr(row, col_name, "")
-            ws.cell(row=row_idx, column=29 + i, value=value)
+            ws.cell(row=row_idx, column=25 + i, value=value)
 
     # 保存为 BytesIO 对象
     output = BytesIO()
