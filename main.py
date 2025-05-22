@@ -1,19 +1,17 @@
 import streamlit as st
 from ui import setup_sidebar, upload_excel_file
-from file_handler import read_excel_file
+from file_handler import extract_target_fields_from_sheet1
 
 def main():
-    st.set_page_config(page_title="Excel 文件预览", layout="wide")
+    st.set_page_config(page_title="订单信息提取", layout="wide")
     setup_sidebar()
 
     uploaded_file = upload_excel_file()
 
     if uploaded_file:
-        excel_data = read_excel_file(uploaded_file)
-
-        for sheet_name, df in excel_data.items():
-            st.subheader(f"📄 工作表: {sheet_name}")
-            st.dataframe(df)
+        extracted_df = extract_target_fields_from_sheet1(uploaded_file)
+        st.write("✅ 提取结果：")
+        st.write(extracted_df)
 
 if __name__ == "__main__":
     main()
