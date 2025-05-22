@@ -3,6 +3,9 @@ import pandas as pd
 from io import BytesIO
 from file_handler import extract_order_info, compute_estimated_test_date
 
+# ✅ 必须放在最前面
+st.set_page_config(page_title="订单信息提取", layout="wide")
+
 def to_excel(df: pd.DataFrame) -> BytesIO:
     output = BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
@@ -11,10 +14,6 @@ def to_excel(df: pd.DataFrame) -> BytesIO:
     return output
 
 def main():
-    st.header("Production")
-    
-    st.set_page_config(page_title="订单信息提取", layout="wide")
-
     st.sidebar.title("📊 Excel 工具")
     st.sidebar.markdown("上传封装交付表 → 提取 → 生成 → 下载")
 
