@@ -139,13 +139,20 @@ def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=2
     # =====================
     # ✅ 写入数据（从第6行开始）
     # =====================
-    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=5):
+    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=6):
         for col_offset, col_name in enumerate(new_columns):
             value = getattr(row, col_name, "")
             col_idx = start_col + col_offset
             cell = ws.cell(row=row_idx, column=col_idx, value=value)
+    
+            # 复制样式（保持一致）
             ref_cell = ws.cell(row=row_idx, column=col_idx - 1)
             copy_cell_style(ref_cell, cell)
+    
+            # ✅ 如果是日期型，设置日期格式
+            if isinstance(value, pd.Timestamp) or isinstance(value, (pd.datetime, pd.date)):
+                cell.number_format = 'yyyy/mm/dd'
+    
             
     # 写入完毕后自动调整列宽
     adjust_column_width_for_openpyxl(ws, df_with_estimates[new_columns], start_col=start_col)
