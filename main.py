@@ -20,7 +20,7 @@ def main():
             st.write("✅ 提取并计算结果：")
             st.dataframe(df_info)
     
-            updated_file = update_existing_sheet_with_estimates(uploaded_file, df_info)
+            updated_file =  update_sheet_preserving_styles(uploaded_file, df_info)
     
             st.download_button(
                 label="📥 下载更新后的原始 Excel",
