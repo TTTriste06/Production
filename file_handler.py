@@ -91,8 +91,23 @@ def copy_cell_style(src_cell, target_cell):
     except Exception as e:
         print(f"⚠️ 样式复制失败: {e}")  # 或者使用 logging.warning(...)
 
+def adjust_column_width_for_openpyxl(ws, df, start_col=25):
+    """
+    根据 DataFrame 的新列内容调整 openpyxl 工作表中指定起始列之后的列宽。
 
-def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=28):  # start_col = AB = 28
+    参数:
+    - ws: openpyxl 的 Worksheet 对象
+    - df: 包含需写入新列的 DataFrame（包含列名和内容）
+    - start_col: 起始列位置（默认从 AB=28 开始）
+    """
+    for i, col in enumerate(df.columns):
+        col_letter = get_column_letter(start_col + i)
+        content_max_len = df[col].astype(str).str.len().max()
+        header_len = len(str(col))
+        width = min(max(content_max_len, header_len) * 1.2 + 7, 50)
+        ws.column_dimensions[col_letter].width = width
+
+def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=25):  # start_col = AB = 28
     """
     在 Sheet1 中追加列并复制样式，保持格式一致。
     
@@ -113,7 +128,7 @@ def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=2
     # =====================
     # ✅ 写入表头（第5行）
     # =====================
-    header_row = 5
+    header_row = 4
     for idx, col_name in enumerate(new_columns):
         col_idx = start_col + idx
         cell = ws.cell(row=header_row, column=col_idx, value=col_name)
@@ -124,14 +139,17 @@ def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=2
     # =====================
     # ✅ 写入数据（从第6行开始）
     # =====================
-    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=6):
+    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=5):
         for col_offset, col_name in enumerate(new_columns):
             value = getattr(row, col_name, "")
             col_idx = start_col + col_offset
             cell = ws.cell(row=row_idx, column=col_idx, value=value)
             ref_cell = ws.cell(row=row_idx, column=col_idx - 1)
             copy_cell_style(ref_cell, cell)
-
+            
+    # 写入完毕后自动调整列宽
+    adjust_column_width_for_openpyxl(ws, df_with_estimates[new_columns], start_col=start_col)
+    
     # 保存到内存
     output = BytesIO()
     wb.save(output)
