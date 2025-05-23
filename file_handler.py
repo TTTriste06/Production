@@ -79,6 +79,19 @@ def append_df_to_original_excel(original_file, new_df, new_sheet_name="提取结
     output.seek(0)
     return output
 
+def copy_cell_style(src_cell, target_cell):
+    try:
+        if src_cell.has_style:
+            if hasattr(src_cell, "font"): target_cell.font = src_cell.font
+            if hasattr(src_cell, "border"): target_cell.border = src_cell.border
+            if hasattr(src_cell, "fill"): target_cell.fill = src_cell.fill
+            if hasattr(src_cell, "number_format"): target_cell.number_format = src_cell.number_format
+            if hasattr(src_cell, "protection"): target_cell.protection = src_cell.protection
+            if hasattr(src_cell, "alignment"): target_cell.alignment = src_cell.alignment
+    except Exception as e:
+        print(f"⚠️ 样式复制失败: {e}")  # 或者使用 logging.warning(...)
+
+
 def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=28):  # start_col = AB = 28
     """
     在 Sheet1 中追加列并复制样式，保持格式一致。
@@ -96,18 +109,6 @@ def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=2
 
     # 新列标题
     new_columns = ["预估开始测试日期", "结束日期"]
-    
-    # =====================
-    # ✅ 复制样式（来自前一列）
-    # =====================
-    def copy_cell_style(src_cell, target_cell):
-        if src_cell.has_style:
-            target_cell.font = src_cell.font
-            target_cell.border = src_cell.border
-            target_cell.fill = src_cell.fill
-            target_cell.number_format = src_cell.number_format
-            target_cell.protection = src_cell.protection
-            target_cell.alignment = src_cell.alignment
 
     # =====================
     # ✅ 写入表头（第5行）
