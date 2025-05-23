@@ -139,7 +139,7 @@ def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=2
     # =====================
     # ✅ 写入数据（从第6行开始）
     # =====================
-    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=6):
+    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=5):
         for col_offset, col_name in enumerate(new_columns):
             value = getattr(row, col_name, "")
             col_idx = start_col + col_offset
