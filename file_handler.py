@@ -104,7 +104,7 @@ def adjust_column_width_for_openpyxl(ws, df, start_col=25):
         col_letter = get_column_letter(start_col + i)
         content_max_len = df[col].astype(str).str.len().max()
         header_len = len(str(col))
-        width = min(max(content_max_len, header_len) * 1.2 + 7, 50)
+        width = min(max(content_max_len, header_len) * 1.2 + 10, 50)
         ws.column_dimensions[col_letter].width = width
 
 def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=25):  # start_col = AB = 28
