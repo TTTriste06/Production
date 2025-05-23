@@ -3,6 +3,9 @@ from io import BytesIO
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.styles import PatternFill, Border, Font, Alignment
+from openpyxl.utils import get_column_letter
+
 
 TARGET_COLUMNS = [
     "订单号", "封装厂", "封装形式", "waferin", "需排产",
@@ -76,35 +79,59 @@ def append_df_to_original_excel(original_file, new_df, new_sheet_name="提取结
     output.seek(0)
     return output
 
-def update_existing_sheet_with_estimates(uploaded_file, df_with_estimates, start_col_letter="AC"):
+def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=28):  # start_col = AB = 28
     """
-    在原始 Excel 的 Sheet1 上追加两列：预估开始测试日期、结束日期，保持样式。
+    在 Sheet1 中追加列并复制样式，保持格式一致。
     
     参数:
-        uploaded_file: Streamlit 上传文件
-        df_with_estimates: 已经包含新字段的 pandas DataFrame
-        start_col_letter: 从哪个 Excel 列开始插入（默认 Y 即第25列）
-
+    - uploaded_file: 上传的 Excel 文件
+    - df_with_estimates: 包含新列（预估开始测试日期、结束日期）的 DataFrame
+    - start_col: 新字段起始列号（28 表示 AB 列）
+    
     返回:
-        BytesIO: 带格式的新 Excel 文件
+    - BytesIO: 新生成的 Excel 文件，包含原格式+追加字段
     """
     wb = load_workbook(uploaded_file)
     ws = wb["Sheet1"]
 
-    # 找出要写入的列（Excel 第6行是表头）
-    headers = df_with_estimates.columns.tolist()
-    estimate_cols = ["预估开始测试日期", "结束日期"]
+    # 新列标题
+    new_columns = ["预估开始测试日期", "结束日期"]
+    
+    # =====================
+    # ✅ 复制样式（来自前一列）
+    # =====================
+    def copy_cell_style(src_cell, target_cell):
+        if src_cell.has_style:
+            target_cell.font = src_cell.font
+            target_cell.border = src_cell.border
+            target_cell.fill = src_cell.fill
+            target_cell.number_format = src_cell.number_format
+            target_cell.protection = src_cell.protection
+            target_cell.alignment = src_cell.alignment
 
-    for i, col_name in enumerate(estimate_cols):
-        ws.cell(row=4, column=25 + i, value=col_name)  # 表头行（第5行）- openpyxl从1开始
+    # =====================
+    # ✅ 写入表头（第5行）
+    # =====================
+    header_row = 5
+    for idx, col_name in enumerate(new_columns):
+        col_idx = start_col + idx
+        cell = ws.cell(row=header_row, column=col_idx, value=col_name)
+        # 复制样式（参考前一列）
+        ref_cell = ws.cell(row=header_row, column=col_idx - 1)
+        copy_cell_style(ref_cell, cell)
 
-    # 从第7行开始写数据（即DataFrame中第1行）
-    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=5):
-        for i, col_name in enumerate(estimate_cols):
+    # =====================
+    # ✅ 写入数据（从第6行开始）
+    # =====================
+    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=6):
+        for col_offset, col_name in enumerate(new_columns):
             value = getattr(row, col_name, "")
-            ws.cell(row=row_idx, column=25 + i, value=value)
+            col_idx = start_col + col_offset
+            cell = ws.cell(row=row_idx, column=col_idx, value=value)
+            ref_cell = ws.cell(row=row_idx, column=col_idx - 1)
+            copy_cell_style(ref_cell, cell)
 
-    # 保存为 BytesIO 对象
+    # 保存到内存
     output = BytesIO()
     wb.save(output)
     output.seek(0)
