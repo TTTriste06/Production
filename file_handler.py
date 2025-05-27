@@ -40,28 +40,24 @@ def add_headers_to_xyz(excel_file: BytesIO) -> BytesIO:
     第4行：X=预估开始测试日期，Y=结束日期，Z=星期
     """
     wb = load_workbook(excel_file)
-    ws = wb["Sheet1"]  # 可根据需要动态指定 sheet
+    ws = wb["Sheet1"]  # 只处理 Sheet1，必要时可参数化
 
-    # 插入两行（第3行和第4行）
-    ws.insert_rows(3, amount=2)
-
-    # 写入标题（注意 Excel 列是1-indexed，X=24, Y=25, Z=26）
-    headers = {
-        24: ["预估开始测试日期", "预估开始测试日期"],  # X列
-        25: ["结束日期", "结束日期"],          # Y列
-        26: ["日期", "星期"]                  # Z列
+    # 第3、4行的 X, Y, Z 列是第 24, 25, 26 列
+    columns = {
+        24: ["预估开始测试日期", "预估开始测试日期"],
+        25: ["结束日期", "结束日期"],
+        26: ["日期", "星期"]
     }
 
-    for col_idx, values in headers.items():
-        for i, val in enumerate(values):
-            ws.cell(row=3+i, column=col_idx, value=val)
+    for col, values in columns.items():
+        for i, val in enumerate(values):  # i=0 -> row=3, i=1 -> row=4
+            ws.cell(row=3+i, column=col, value=val)
 
-    # 保存到 BytesIO
+    # 保存回 BytesIO
     output = BytesIO()
     wb.save(output)
     output.seek(0)
     return output
-
 
 def append_df_to_original_excel(original_file, new_df, new_sheet_name="提取结果") -> BytesIO:
     """
