@@ -59,34 +59,6 @@ def add_headers_to_xyz(excel_file: BytesIO) -> BytesIO:
     output.seek(0)
     return output
 
-def append_df_to_original_excel(original_file, new_df, new_sheet_name="提取结果") -> BytesIO:
-    """
-    将新数据添加为原 Excel 文件中的一个新工作表，并返回内存中的 BytesIO 对象。
-    
-    参数:
-    - original_file: Streamlit 上传的文件对象
-    - new_df: 需追加写入的新 DataFrame
-    - new_sheet_name: 新工作表名
-    
-    返回:
-    - BytesIO: 包含原始内容 + 新工作表 的 Excel 文件对象
-    """
-    # 读入原始 Excel 的全部内容
-    original_excel = pd.ExcelFile(original_file)
-    output = BytesIO()
-
-    with pd.ExcelWriter(output, engine="openpyxl", mode="w") as writer:
-        # 将原有 sheet 写入
-        for sheet_name in original_excel.sheet_names:
-            df_sheet = original_excel.parse(sheet_name)
-            df_sheet.to_excel(writer, sheet_name=sheet_name, index=False)
-
-        # 写入新提取 sheet
-        new_df.to_excel(writer, sheet_name=new_sheet_name, index=False)
-
-    output.seek(0)
-    return output
-
 
 def adjust_column_width_for_openpyxl(ws, df, start_col=25):
     """
@@ -104,62 +76,32 @@ def adjust_column_width_for_openpyxl(ws, df, start_col=25):
         width = min(max(content_max_len, header_len) * 1.2 + 10, 50)
         ws.column_dimensions[col_letter].width = width
 
-def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=25):
-    from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
-    import pandas as pd
-    from openpyxl.utils import get_column_letter
-    from io import BytesIO
+def compute_estimated_test_date(df):
+    """
+    计算“预估开始测试日期”：waferin 日期 + 排产周期 + 磨划周期 + 封装周期，单位为天。
 
-    # 样式定义
-    blue_fill = PatternFill(start_color='BDD7EE', end_color='BDD7EE', fill_type='solid')
-    thin_border = Border(
-        left=Side(style='thin', color='000000'),
-        right=Side(style='thin', color='000000'),
-        top=Side(style='thin', color='000000'),
-        bottom=Side(style='thin', color='000000')
-    )
-    bold_font = Font(bold=True)
-    center_align = Alignment(horizontal="center", vertical="center")
-    date_number_format = 'yyyy/mm/dd'
+    要求 df 中存在：
+    - '实际开始测试日'：日期列
+    - '排产周期'、'磨划周期'、'封装周期'：整数字段，单位为天
+    """
+    # 复制 DataFrame 防止原地修改
+    df = df.copy()
 
-    wb = load_workbook(uploaded_file)
-    ws = wb["Sheet1"]
+    # 确保日期格式正确
+    df["实际开始测试日"] = pd.to_datetime(df["实际开始测试日"], errors="coerce")
 
-    new_columns = ["预估开始测试日期", "结束日期"]
+    # 填充空周期为 0
+    for col in ["排产周期", "磨划周期", "封装周期"]:
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
 
-    # 写入表头（第4行为空，第5行为列名）
-    for idx, col_name in enumerate(new_columns):
-        col_idx = start_col + idx
+    # 计算总周期天数
+    df["总周期天数"] = df["排产周期"] + df["磨划周期"] + df["封装周期"]
 
-        # 第4行留空 + 黑边
-        cell1 = ws.cell(row=4, column=col_idx)
-        cell1.border = thin_border
+    # 计算预估开始测试日期
+    df["预估开始测试日期"] = df["实际开始测试日"] + pd.to_timedelta(df["总周期天数"], unit="D")
 
-        # 第5行列名 + 蓝底 + 黑边 + 居中加粗
-        cell2 = ws.cell(row=5, column=col_idx, value=col_name)
-        cell2.fill = blue_fill
-        cell2.border = thin_border
-        cell2.font = bold_font
-        cell2.alignment = center_align
+    # 格式化为 yyyy/mm/dd 字符串
+    df["预估开始测试日期"] = df["预估开始测试日期"].dt.strftime("%Y/%m/%d")
 
-    # 写入数据（第6行起）
-    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=6):
-        for offset, col_name in enumerate(new_columns):
-            value = getattr(row, col_name, "")
-            col_idx = start_col + offset
-            cell = ws.cell(row=row_idx, column=col_idx, value=value)
+    return df
 
-            # 设置统一样式
-            cell.border = thin_border
-            cell.alignment = center_align
-            if isinstance(value, pd.Timestamp):
-                cell.number_format = date_number_format
-
-    # 自动列宽
-    adjust_column_width_for_openpyxl(ws, df_with_estimates[new_columns], start_col=start_col)
-
-    # 保存
-    output = BytesIO()
-    wb.save(output)
-    output.seek(0)
-    return output
