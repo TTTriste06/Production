@@ -15,12 +15,11 @@ def main():
     if uploaded_file:
         if st.button("📥 生成订单信息"):
             df_info = extract_order_info(uploaded_file)
-            df_info = compute_estimated_test_date(df_info)
-    
+        
             st.write("✅ 提取并计算结果：")
             st.dataframe(df_info)
     
-            updated_file =  update_sheet_preserving_styles(uploaded_file, df_info)
+            updated_file = add_headers_to_xyz(uploaded_file)
     
             st.download_button(
                 label="📥 下载更新后的原始 Excel",
