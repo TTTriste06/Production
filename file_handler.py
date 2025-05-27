@@ -32,32 +32,33 @@ def extract_order_info(uploaded_file):
     except Exception as e:
         return pd.DataFrame({"错误信息": [str(e)]})
 
-
-def add_headers_to_xyz(excel_file: BytesIO) -> BytesIO:
+def write_xyz_columns(excel_file: BytesIO, df_info: pd.DataFrame) -> BytesIO:
     """
-    在 X、Y、Z 列添加两行标题：
-    第3行：X=预估开始测试日期，Y=结束日期，Z=日期
-    第4行：X=预估开始测试日期，Y=结束日期，Z=星期
+    将 df_info 中的“预估开始测试日期”等数据写入原始 Excel 文件中的 X、Y、Z 列，并设置第3/4行的列标题。
     """
     wb = load_workbook(excel_file)
-    ws = wb["Sheet1"]  # 只处理 Sheet1，必要时可参数化
+    ws = wb["Sheet1"]
 
-    # 第3、4行的 X, Y, Z 列是第 24, 25, 26 列
-    columns = {
-        24: ["预估开始测试日期", "预估开始测试日期"],
-        25: ["结束日期", "结束日期"],
-        26: ["日期", "星期"]
+    # 1. 写入第3、4行标题
+    headers = {
+        24: ["预估开始测试日期", "预估开始测试日期"],  # X列
+        25: ["结束日期", "结束日期"],          # Y列（你可以后续添加）
+        26: ["日期", "星期"]                  # Z列（你可以后续添加）
     }
+    for col_idx, values in headers.items():
+        for i, val in enumerate(values):
+            ws.cell(row=3+i, column=col_idx, value=val)
 
-    for col, values in columns.items():
-        for i, val in enumerate(values):  # i=0 -> row=3, i=1 -> row=4
-            ws.cell(row=3+i, column=col, value=val)
+    # 2. 写入数据：从第5行开始
+    for i, value in enumerate(df_info["预估开始测试日期"], start=5):
+        ws.cell(row=i, column=24, value=value)  # X列
 
-    # 保存回 BytesIO
+    # 保存为 BytesIO
     output = BytesIO()
     wb.save(output)
     output.seek(0)
     return output
+
 
 
 def adjust_column_width_for_openpyxl(ws, df, start_col=25):
