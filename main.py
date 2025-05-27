@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 from ui import setup_sidebar, upload_excel_file
-from file_handler import extract_order_info, compute_estimated_test_date, update_sheet_preserving_styles
+from file_handler import extract_order_info, add_headers_to_xyz
 
 
 st.set_page_config(page_title="订单信息提取", layout="wide")  # ✅ 最上方
