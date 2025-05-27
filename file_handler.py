@@ -164,3 +164,4 @@ def write_calendar_headers(excel_file: BytesIO, df_info: pd.DataFrame, start_col
     wb.save(output)
     output.seek(0)
     return output
+
