@@ -89,7 +89,7 @@ def copy_cell_style(src_cell, target_cell):
             if hasattr(src_cell, "protection"): target_cell.protection = src_cell.protection
             if hasattr(src_cell, "alignment"): target_cell.alignment = src_cell.alignment
     except Exception as e:
-        print(f"⚠️ 样式复制失败: {e}")  # 或者使用 logging.warning(...)
+        st.write(f"⚠️ 样式复制失败: {e}")  # 或者使用 logging.warning(...)
 
 def adjust_column_width_for_openpyxl(ws, df, start_col=25):
     """
