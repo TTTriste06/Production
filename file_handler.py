@@ -2,6 +2,7 @@ import pandas as pd
 from io import BytesIO
 import pandas as pd
 import streamlit as st
+import copy
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import PatternFill, Border, Font, Alignment
@@ -83,14 +84,19 @@ def append_df_to_original_excel(original_file, new_df, new_sheet_name="提取结
 def copy_cell_style(src_cell, target_cell):
     try:
         if src_cell.has_style:
-            if hasattr(src_cell, "font"): target_cell.font = src_cell.font
-            if hasattr(src_cell, "border"): target_cell.border = src_cell.border
-            if hasattr(src_cell, "fill"): target_cell.fill = src_cell.fill
-            if hasattr(src_cell, "number_format"): target_cell.number_format = src_cell.number_format
-            if hasattr(src_cell, "protection"): target_cell.protection = src_cell.protection
-            if hasattr(src_cell, "alignment"): target_cell.alignment = src_cell.alignment
+            if isinstance(src_cell.font, Font):
+                target_cell.font = copy.copy(src_cell.font)
+            if isinstance(src_cell.border, Border):
+                target_cell.border = copy.copy(src_cell.border)
+            if isinstance(src_cell.fill, PatternFill):
+                target_cell.fill = copy.copy(src_cell.fill)
+            if isinstance(src_cell.alignment, Alignment):
+                target_cell.alignment = copy.copy(src_cell.alignment)
+
+            # 日期格式是字符串，可以直接复制
+            target_cell.number_format = src_cell.number_format
     except Exception as e:
-        st.write(f"⚠️ 样式复制失败: {e}")  # 或者使用 logging.warning(...)
+        st.warning(f"⚠️ 样式复制失败: {e}")
 
 def adjust_column_width_for_openpyxl(ws, df, start_col=25):
     """
