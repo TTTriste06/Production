@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 from ui import setup_sidebar, upload_excel_file
-from file_handler import extract_order_info, add_headers_to_xyz
+from file_handler import extract_order_info, add_headers_to_xyz, compute_estimated_test_date
 
 
 st.set_page_config(page_title="订单信息提取", layout="wide")  # ✅ 最上方
@@ -15,6 +15,7 @@ def main():
     if uploaded_file:
         if st.button("📥 生成订单信息"):
             df_info = extract_order_info(uploaded_file)
+            df_info = compute_estimated_test_date(df_info)
         
             st.write("✅ 提取并计算结果：")
             st.dataframe(df_info)
