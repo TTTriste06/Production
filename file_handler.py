@@ -146,10 +146,12 @@ def write_calendar_headers(excel_file: BytesIO, df_info: pd.DataFrame, start_col
         weekday_list.append(formatted_weekday)
 
     # 构建临时 DataFrame 用于列宽调整
-    temp_df = pd.DataFrame([date_list, weekday_list]).T
-    temp_df.columns = [f"Day{i+1}" for i in range(len(date_list))]
+        temp_df = pd.DataFrame({
+        "日期": date_list,
+        "星期": weekday_list
+    })
 
-    adjust_column_width_for_openpyxl(ws, temp_df, start_col=start_col)
+    adjust_column_width_for_openpyxl(ws, temp_df.T, start_col=start_col)
 
     output = BytesIO()
     wb.save(output)
