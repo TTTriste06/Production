@@ -81,22 +81,6 @@ def append_df_to_original_excel(original_file, new_df, new_sheet_name="提取结
     output.seek(0)
     return output
 
-def copy_cell_style(src_cell, target_cell):
-    try:
-        if src_cell.has_style:
-            if isinstance(src_cell.font, Font):
-                target_cell.font = copy.copy(src_cell.font)
-            if isinstance(src_cell.border, Border):
-                target_cell.border = copy.copy(src_cell.border)
-            if isinstance(src_cell.fill, PatternFill):
-                target_cell.fill = copy.copy(src_cell.fill)
-            if isinstance(src_cell.alignment, Alignment):
-                target_cell.alignment = copy.copy(src_cell.alignment)
-
-            # 日期格式是字符串，可以直接复制
-            target_cell.number_format = src_cell.number_format
-    except Exception as e:
-        st.warning(f"⚠️ 样式复制失败: {e}")
 
 def adjust_column_width_for_openpyxl(ws, df, start_col=25):
     """
@@ -114,57 +98,61 @@ def adjust_column_width_for_openpyxl(ws, df, start_col=25):
         width = min(max(content_max_len, header_len) * 1.2 + 10, 50)
         ws.column_dimensions[col_letter].width = width
 
-def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=25):  # start_col = AB = 28
-    """
-    在 Sheet1 中追加列并复制样式，保持格式一致。
-    
-    参数:
-    - uploaded_file: 上传的 Excel 文件
-    - df_with_estimates: 包含新列（预估开始测试日期、结束日期）的 DataFrame
-    - start_col: 新字段起始列号（28 表示 AB 列）
-    
-    返回:
-    - BytesIO: 新生成的 Excel 文件，包含原格式+追加字段
-    """
+def update_sheet_preserving_styles(uploaded_file, df_with_estimates, start_col=25):
+    from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
+    import pandas as pd
+    from openpyxl.utils import get_column_letter
+    from io import BytesIO
+
+    # 样式定义
+    blue_fill = PatternFill(start_color='BDD7EE', end_color='BDD7EE', fill_type='solid')
+    thin_border = Border(
+        left=Side(style='thin', color='000000'),
+        right=Side(style='thin', color='000000'),
+        top=Side(style='thin', color='000000'),
+        bottom=Side(style='thin', color='000000')
+    )
+    bold_font = Font(bold=True)
+    center_align = Alignment(horizontal="center", vertical="center")
+    date_number_format = 'yyyy/mm/dd'
+
     wb = load_workbook(uploaded_file)
     ws = wb["Sheet1"]
 
-    # 新列标题
     new_columns = ["预估开始测试日期", "结束日期"]
 
-    # =====================
-    # ✅ 写入表头（第5行）
-    # =====================
-    header_row = 4
+    # 写入表头（第4行为空，第5行为列名）
     for idx, col_name in enumerate(new_columns):
         col_idx = start_col + idx
-        cell = ws.cell(row=header_row, column=col_idx, value=col_name)
-        # 复制样式（参考前一列）
-        ref_cell = ws.cell(row=header_row, column=col_idx - 1)
-        copy_cell_style(ref_cell, cell)
 
-    # =====================
-    # ✅ 写入数据（从第6行开始）
-    # =====================
-    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=5):
-        for col_offset, col_name in enumerate(new_columns):
+        # 第4行留空 + 黑边
+        cell1 = ws.cell(row=4, column=col_idx)
+        cell1.border = thin_border
+
+        # 第5行列名 + 蓝底 + 黑边 + 居中加粗
+        cell2 = ws.cell(row=5, column=col_idx, value=col_name)
+        cell2.fill = blue_fill
+        cell2.border = thin_border
+        cell2.font = bold_font
+        cell2.alignment = center_align
+
+    # 写入数据（第6行起）
+    for row_idx, row in enumerate(df_with_estimates.itertuples(index=False), start=6):
+        for offset, col_name in enumerate(new_columns):
             value = getattr(row, col_name, "")
-            col_idx = start_col + col_offset
+            col_idx = start_col + offset
             cell = ws.cell(row=row_idx, column=col_idx, value=value)
-    
-            # 复制样式（保持一致）
-            ref_cell = ws.cell(row=row_idx, column=col_idx - 1)
-            copy_cell_style(ref_cell, cell)
-    
-            # ✅ 如果是日期型，设置日期格式
-            if isinstance(value, pd.Timestamp) or isinstance(value, (pd.datetime, pd.date)):
-                cell.number_format = 'yyyy/mm/dd'
-    
-            
-    # 写入完毕后自动调整列宽
+
+            # 设置统一样式
+            cell.border = thin_border
+            cell.alignment = center_align
+            if isinstance(value, pd.Timestamp):
+                cell.number_format = date_number_format
+
+    # 自动列宽
     adjust_column_width_for_openpyxl(ws, df_with_estimates[new_columns], start_col=start_col)
-    
-    # 保存到内存
+
+    # 保存
     output = BytesIO()
     wb.save(output)
     output.seek(0)
