@@ -21,6 +21,8 @@ def main():
             st.dataframe(df_info)
     
             updated_file = write_xyz_columns(uploaded_file, df_info)
+            updated_file = write_calendar_headers(updated_file, df_info)
+
     
             st.download_button(
                 label="📥 下载更新后的原始 Excel",
