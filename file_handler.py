@@ -33,25 +33,35 @@ def extract_order_info(uploaded_file):
         return pd.DataFrame({"错误信息": [str(e)]})
 
 
-def compute_estimated_test_date(df: pd.DataFrame) -> pd.DataFrame:
+def add_headers_to_xyz(excel_file: BytesIO) -> BytesIO:
     """
-    根据 wafer in 和周期列计算预估开始测试日期，并添加新列。
-    
-    参数:
-        df: 包含原始字段的 DataFrame（需包含 wafer in 和周期列）
+    在 X、Y、Z 列添加两行标题：
+    第3行：X=预估开始测试日期，Y=结束日期，Z=日期
+    第4行：X=预估开始测试日期，Y=结束日期，Z=星期
+    """
+    wb = load_workbook(excel_file)
+    ws = wb["Sheet1"]  # 可根据需要动态指定 sheet
 
-    返回:
-        pd.DataFrame: 增加了“预估开始测试日期”和“结束日期”的 DataFrame
-    """
-    try:
-        df = df.copy()
-        df["waferin"] = pd.to_datetime(df["waferin"], errors="coerce")
-        df["总周期"] = df[["排产周期", "磨划周期", "封装周期"]].sum(axis=1, skipna=True)
-        df["预估开始测试日期"] = df["waferin"] + pd.to_timedelta(df["总周期"], unit="D")
-        df["结束日期"] = df["预估开始测试日期"]  # 占位（你可修改逻辑）
-        return df
-    except Exception as e:
-        return pd.DataFrame({"错误信息": [str(e)]})
+    # 插入两行（第3行和第4行）
+    ws.insert_rows(3, amount=2)
+
+    # 写入标题（注意 Excel 列是1-indexed，X=24, Y=25, Z=26）
+    headers = {
+        24: ["预估开始测试日期", "预估开始测试日期"],  # X列
+        25: ["结束日期", "结束日期"],          # Y列
+        26: ["日期", "星期"]                  # Z列
+    }
+
+    for col_idx, values in headers.items():
+        for i, val in enumerate(values):
+            ws.cell(row=3+i, column=col_idx, value=val)
+
+    # 保存到 BytesIO
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
+
 
 def append_df_to_original_excel(original_file, new_df, new_sheet_name="提取结果") -> BytesIO:
     """
