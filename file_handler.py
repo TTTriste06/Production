@@ -106,3 +106,50 @@ def compute_estimated_test_date(df):
 
     return df
 
+
+def write_calendar_headers(excel_file: BytesIO, df_info: pd.DataFrame, start_col: int = 28, weeks: int = 7) -> BytesIO:
+    """
+    从 AB 列（第28列）开始，写入：
+    - 第3行：从预估开始测试日期最早日期起往后连续 dates（默认7周=49天）
+    - 第4行：对应星期（中文：一二三四五六日）
+
+    参数:
+    - excel_file: BytesIO 原始文件
+    - df_info: 包含 '预估开始测试日期' 列的 DataFrame
+    - start_col: 起始列（默认AB=28）
+    - weeks: 写入的周数（默认7周）
+    """
+    wb = load_workbook(excel_file)
+    ws = wb["Sheet1"]
+
+    # 解析最早日期
+    df_info = df_info.copy()
+    df_info["预估开始测试日期"] = pd.to_datetime(df_info["预估开始测试日期"], errors="coerce")
+    min_date = df_info["预估开始测试日期"].min()
+
+    if pd.isna(min_date):
+        raise ValueError("❌ 无法从 '预估开始测试日期' 中解析出合法日期")
+
+    # 星期中文映射
+    weekday_map = {
+        0: "一", 1: "二", 2: "三", 3: "四", 4: "五", 5: "六", 6: "日"
+    }
+
+    for i in range(weeks * 7):
+        col_idx = start_col + i
+        current_date = min_date + pd.Timedelta(days=i)
+
+        # 写入第3行：日期
+        ws.cell(row=3, column=col_idx, value=current_date.strftime("%Y/%m/%d"))
+
+        # 写入第4行：星期
+        weekday = weekday_map[current_date.weekday()]
+        ws.cell(row=4, column=col_idx, value=weekday)
+
+    # 保存并返回 BytesIO
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
+
+
