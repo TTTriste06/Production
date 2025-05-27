@@ -46,37 +46,44 @@ def adjust_column_width_for_openpyxl(ws, df, start_col=25):
         width = min(max(content_max_len, header_len) * 1.2 + 7, 50)
         ws.column_dimensions[col_letter].width = width
 
-
 def write_xyz_columns(excel_file: BytesIO, df_info: pd.DataFrame) -> BytesIO:
     """
-    写入 X、Y、Z 列的表头与数据，并调整列宽：
-    - 第3/4行写入表头
-    - 第5行起写入 '预估开始测试日期'（第24列）
+    写入 X、Y、Z 列：
+    - 第3/4行写入标题
+    - X列填入 '预估开始测试日期'
+    - Z列填入固定值 "排产"
     - 自动调整列宽
     """
     wb = load_workbook(excel_file)
     ws = wb["Sheet1"]
 
-    # 写入表头：行3和4
+    # 表头写入（行3和4）
     header_map = {
         24: ["预估开始测试日期", "预估开始测试日期"],  # X
-        25: ["结束日期", "结束日期"],          # Y（可扩展）
-        26: ["日期", "星期"]                  # Z（可扩展）
+        25: ["结束日期", "结束日期"],          # Y（保留占位）
+        26: ["日期", "星期"]                  # Z
     }
 
     for col_idx, values in header_map.items():
         for i, val in enumerate(values):
             ws.cell(row=3 + i, column=col_idx, value=val)
 
-    # 写入 X 列数据（第 24 列）
+    # 写入 X列（第24列）内容
     for i, value in enumerate(df_info["预估开始测试日期"], start=5):
         ws.cell(row=i, column=24, value=value)
 
-    # 用一个包含“预估开始测试日期”的临时 DataFrame 来调整 X 列宽度
-    temp_df = pd.DataFrame({"预估开始测试日期": df_info["预估开始测试日期"]})
+    # 写入 Z列（第26列）内容为固定值“排产”
+    for i in range(5, 5 + len(df_info)):
+        ws.cell(row=i, column=26, value="排产")
+
+    # 调整列宽
+    temp_df = pd.DataFrame({
+        "预估开始测试日期": df_info["预估开始测试日期"],
+        "排产": ["排产"] * len(df_info)
+    })
     adjust_column_width_for_openpyxl(ws, temp_df, start_col=24)
 
-    # 保存回 BytesIO
+    # 保存为 BytesIO 返回
     output = BytesIO()
     wb.save(output)
     output.seek(0)
