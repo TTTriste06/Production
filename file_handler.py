@@ -81,14 +81,14 @@ def compute_estimated_test_date(df):
     计算“预估开始测试日期”：waferin 日期 + 排产周期 + 磨划周期 + 封装周期，单位为天。
 
     要求 df 中存在：
-    - '实际开始测试日'：日期列
+    - 'waferin'：日期列
     - '排产周期'、'磨划周期'、'封装周期'：整数字段，单位为天
     """
     # 复制 DataFrame 防止原地修改
     df = df.copy()
 
     # 确保日期格式正确
-    df["实际开始测试日"] = pd.to_datetime(df["实际开始测试日"], errors="coerce")
+    df["waferin"] = pd.to_datetime(df["waferin"], errors="coerce")
 
     # 填充空周期为 0
     for col in ["排产周期", "磨划周期", "封装周期"]:
@@ -98,7 +98,7 @@ def compute_estimated_test_date(df):
     df["总周期天数"] = df["排产周期"] + df["磨划周期"] + df["封装周期"]
 
     # 计算预估开始测试日期
-    df["预估开始测试日期"] = df["实际开始测试日"] + pd.to_timedelta(df["总周期天数"], unit="D")
+    df["预估开始测试日期"] = df["waferin"] + pd.to_timedelta(df["总周期天数"], unit="D")
 
     # 格式化为 yyyy/mm/dd 字符串
     df["预估开始测试日期"] = df["预估开始测试日期"].dt.strftime("%Y/%m/%d")
