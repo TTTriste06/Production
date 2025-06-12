@@ -7,6 +7,7 @@ from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import PatternFill, Border, Font, Alignment
 from openpyxl.utils import get_column_letter
+from datetime import datetime, timedelta
 
 
 TARGET_COLUMNS = [
@@ -119,49 +120,46 @@ def compute_estimated_test_date(df):
     return df
 
 
-def write_calendar_headers(excel_file: BytesIO, df_info: pd.DataFrame, start_col: int = 27, weeks: int = 7) -> BytesIO:
+def write_calendar_headers(file_bytes, df_info, start_col_index=28, days=14):
     """
-    从指定起始列写入日期与星期，并自动调整这些列的列宽。
-    - 第3行：日期（yyyy/mm/dd）
-    - 第4行：星期（中文 一~日）
+    在 Excel 文件中写入连续日期和星期表头（从 AB列开始），同时将这些日期列加入 df_info。
+    
+    参数:
+    - file_bytes: 原始 Excel 文件的二进制数据
+    - df_info: DataFrame 对象，将添加日期列
+    - start_col_index: 起始列号（默认为 28，即 AB）
+    - days: 要写入的连续天数（默认14天）
+
+    返回:
+    - updated_file: 新的二进制 Excel 文件
+    - df_info: 添加了日期列的新 DataFrame
     """
-    wb = load_workbook(excel_file)
-    ws = wb["Sheet1"]
+    wb = load_workbook(filename=BytesIO(file_bytes))
+    ws = wb.active
 
-    df_info = df_info.copy()
-    df_info["预估开始测试日期"] = pd.to_datetime(df_info["预估开始测试日期"], errors="coerce")
-    min_date = df_info["预估开始测试日期"].min()
-    if pd.isna(min_date):
-        raise ValueError("❌ 无法从 '预估开始测试日期' 中解析出合法日期")
+    today = datetime.today()
+    date_columns = []
+    
+    for i in range(days):
+        date = today + timedelta(days=i)
+        date_str = date.strftime("%Y/%m/%d")
+        weekday = date.strftime("%A")
 
-    weekday_map = {0: "一", 1: "二", 2: "三", 3: "四", 4: "五", 5: "六", 6: "日"}
+        col_letter = get_column_letter(start_col_index + i)
+        ws[f"{col_letter}1"] = date_str
+        ws[f"{col_letter}2"] = weekday
+        ws[f"{col_letter}1"].alignment = Alignment(horizontal="center")
+        ws[f"{col_letter}2"].alignment = Alignment(horizontal="center")
 
-    date_list = []
-    weekday_list = []
+        # 将日期列初始化加入 DataFrame
+        df_info[date_str] = 0
+        date_columns.append(date_str)
 
-    for i in range(weeks * 7):
-        col_idx = start_col + i
-        current_date = min_date + pd.Timedelta(days=i)
-
-        formatted_date = current_date.strftime("%Y/%m/%d")
-        formatted_weekday = weekday_map[current_date.weekday()]
-
-        ws.cell(row=3, column=col_idx, value=formatted_date)
-        ws.cell(row=4, column=col_idx, value=formatted_weekday)
-
-        date_list.append(formatted_date)
-        weekday_list.append(formatted_weekday)
-
-    # 构建临时 DataFrame 用于列宽调整
-        temp_df = pd.DataFrame({
-        "日期": date_list,
-        "星期": weekday_list
-    })
-
-    adjust_column_width_for_openpyxl(ws, temp_df.T, start_col=start_col)
-
+    # 保存 Excel 回内存
     output = BytesIO()
     wb.save(output)
     output.seek(0)
-    return output
+
+    return output.read(), df_info  # 返回更新后的文件和 df_info
+
 
