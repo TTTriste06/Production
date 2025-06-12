@@ -18,7 +18,6 @@ if uploaded_file:
     df_data = df_raw.iloc[header_row+1:].copy()
     df_data.reset_index(drop=True, inplace=True)
 
-    st.write(df_data.columns)
     # 检查必要字段
     required_columns = ["订单号", "投单数", "封装厂", "封装形式", "waferin", "需求", "需排产", "排产周期", "磨划周期", "封装周期", "总产能", "分配产能", "实际开始测试日期"]
     missing = [col for col in required_columns if col not in df_data.columns]
