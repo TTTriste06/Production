@@ -1,4 +1,5 @@
 import pandas as pd
+import streamlit as st
 from datetime import timedelta
 
 def schedule_production(df_info: pd.DataFrame, date_columns: list) -> pd.DataFrame:
@@ -24,6 +25,7 @@ def schedule_production(df_info: pd.DataFrame, date_columns: list) -> pd.DataFra
     used_capacity = {}
 
     # 拆成有“实际开始测试日”和无的两部分，确保优先排定日期的
+    st.write(df_fixed)
     df_fixed = df[df["实际开始测试日期"].notna()].copy()
     df_fixed["实际开始测试日期"] = pd.to_datetime(df_fixed["实际开始测试日期"])
 
