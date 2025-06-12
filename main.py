@@ -31,9 +31,9 @@ def main():
             updated_file = write_calendar_headers(updated_file, df_info)
 
             # 5. 找到所有日期列名（从 AB 开始）作为排产目标列
-            date_columns = [col for col in df_info.columns if col.startswith("20")]
+            date_columns = [col for col in updated_file.columns if col.startswith("20")]
 
-            st.write(df_info)
+            st.write(date_columns)
             # 6. 排产逻辑处理：按封装厂+封装形式+产能安排每日产量
             # df_info = schedule_production(df_info, date_columns)
 
