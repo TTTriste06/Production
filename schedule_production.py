@@ -16,6 +16,8 @@ def schedule_production(df_info: pd.DataFrame, date_columns: list) -> pd.DataFra
     返回:
     - 更新后的 df_info，日期列写入每日排产数量
     """
+    st.write(df_info)
+    
     df = df_info.copy()
     df[date_columns] = 0  # 初始化所有日期列为 0
 
