@@ -34,11 +34,11 @@ def main():
             date_columns = [col for col in df_info.columns if col.startswith("20")]
 
             # 6. 排产逻辑处理：按封装厂+封装形式+产能安排每日产量
-            df_info = schedule_production(df_info, date_columns)
+            # df_info = schedule_production(df_info, date_columns)
 
             # 7. 显示最终排产表（带日期列）
-            st.write("✅ 排产计划预览：")
-            st.dataframe(df_info)
+            # st.write("✅ 排产计划预览：")
+            # st.dataframe(df_info)
 
             # 8. ✅ （可选）将含排产量的 df_info 再写入 Excel（此处你可以补一个函数）
             # updated_file = write_production_to_excel(updated_file, df_info, start_col=28)
