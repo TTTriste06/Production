@@ -46,7 +46,7 @@ def schedule_production(df_info: pd.DataFrame, date_columns: list) -> pd.DataFra
         if pd.notna(row["实际开始测试日期"]):
             current_date = row["实际开始测试日期"]
         else:
-            current_date = pd.to_datetime(date_columns[0])  # 默认从首日开始
+            current_date = pd.to_datetime(date_columns[1])  # 默认从首日开始
 
         produced = 0
 
