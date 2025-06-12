@@ -26,8 +26,8 @@ if uploaded_file:
     else:
         # 调用排产逻辑
         try:
-            df_scheduled = schedule_sheet(df_data)
             st.write(df_data)
+            df_scheduled = schedule_sheet(df_data)
             st.success("✅ 排产完成！")
             st.dataframe(df_scheduled.head())
 
