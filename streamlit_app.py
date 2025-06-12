@@ -9,11 +9,11 @@ st.title("📦 委外封装排产软件")
 uploaded_file = st.file_uploader("上传订单 Excel 文件（包含排产字段）", type=["xlsx"])
 
 if uploaded_file:
-    df_raw = pd.read_excel(uploaded_file, sheet_name="Sheet1", header=2)
+    df_raw = pd.read_excel(uploaded_file, sheet_name="Sheet1", header=1)
     st.success("✅ 文件上传成功！开始解析...")
 
     # 从第5行作为字段行，第6行开始是数据
-    header_row = 0
+    header_row = 1
     df_raw.columns = df_raw.iloc[header_row]
     df_data = df_raw.iloc[header_row+1:].copy()
     df_data.reset_index(drop=True, inplace=True)
