@@ -17,6 +17,9 @@ def main():
 
     if uploaded_file:
         if st.button("📥 生成排产计划"):
+            file_bytes = uploaded_file.read()
+            uploaded_file.seek(0)
+        
             # 1. 提取字段
             df_info = extract_order_info(uploaded_file)
 
@@ -24,10 +27,10 @@ def main():
             df_info = compute_estimated_test_date(df_info)
 
             # 3. 生成 XYZ 表头
-            updated_file = write_xyz_columns(uploaded_file, df_info)
+            file_bytes = write_xyz_columns(file_bytes, df_info)
 
             # ✅ 4. 写入日期表头并更新 df_info
-            updated_file, df_info = write_calendar_headers(updated_file, df_info)
+            file_bytes, df_info = write_calendar_headers(file_bytes, df_info)
 
             # ✅ 5. 提取新写入的日期列
             date_columns = [col for col in df_info.columns if col.startswith("20")]
