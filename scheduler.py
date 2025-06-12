@@ -1,6 +1,13 @@
 import pandas as pd
 from datetime import timedelta
 
+def convert_excel_date(val):
+    if pd.isnull(val):
+        return pd.NaT
+    if isinstance(val, (int, float)):
+        return pd.to_datetime("1899-12-30") + pd.to_timedelta(val, unit="D")
+    return pd.to_datetime(val, errors="coerce")
+
 def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
@@ -18,10 +25,11 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
 
     # 转换日期字段，强制要求实际开始测试日期非空
     df["waferin"] = pd.to_datetime(df["waferin"], errors='coerce')
-    df["实际开始测试日期"] = pd.to_datetime(df["实际开始测试日期"], errors='coerce')
+    df["实际开始测试日期"] = df["实际开始测试日期"].apply(convert_excel_date)
     if df["实际开始测试日期"].isnull().any():
         raise ValueError("❌ 存在缺失的“实际开始测试日期”，该字段为必填，请补充完整！")
 
+    st.write(df["实际开始测试日期"])
     def compute_start_date(row):
         standard_start = row["waferin"] + timedelta(days=int(row["排产周期"]) + int(row["磨划周期"]) + int(row["封装周期"]))
         if row["实际开始测试日期"] < standard_start:
