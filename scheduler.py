@@ -12,15 +12,6 @@ def convert_excel_date(val):
 def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
-    # 检查必要字段
-    required_columns = [
-        "订单号", "投单数", "封装厂", "封装形式", "waferin", "需求", "需排产",
-        "排产周期", "磨划周期", "封装周期", "总产能", "分配产能", "实际开始测试日期"
-    ]
-    missing = [col for col in required_columns if col not in df.columns]
-    if missing:
-        raise ValueError(f"缺少必要字段：{missing}")
-
     if df["分配产能"].isnull().any():
         raise ValueError("部分产品缺少“分配产能”字段，请检查原始数据！")
 
