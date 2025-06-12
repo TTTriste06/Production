@@ -30,6 +30,7 @@ def main():
             # 4. 写入日期/星期列（从 AB 开始），返回 updated_file 并生成 date_columns
             updated_file = write_calendar_headers(updated_file, df_info)
 
+            st.write(updated_file)
             # 5. 找到所有日期列名（从 AB 开始）作为排产目标列
             date_columns = [col for col in updated_file.columns if col.startswith("20")]
 
