@@ -72,16 +72,25 @@ if uploaded_file:
                 # 给 A-W 区域 header 以下区域填淡蓝色背景
                 from openpyxl.styles import PatternFill
                 data_fill = PatternFill(fill_type="solid", fgColor="DCE6F1")
-                yellow_fill = PatternFill(fill_type="solid", fgColor="FFF2CC")
+                yellow_fill = PatternFill(fill_type="solid", fgColor="FFFF00")
                 max_row = worksheet.max_row
                 for row in range(3, max_row + 1):
                     for col in range(1, 24):  # A-W 即第1列到第23列
                         cell = worksheet.cell(row=row, column=col)
                         cell.fill = data_fill
 
-                # 为有排产数量的单元格添加浅黄色背景
+                # 仅对排产日期列（即列名是日期）标黄
+                date_cols = []
+                for idx, col in enumerate(df_scheduled.columns):
+                    try:
+                        if pd.to_datetime(col, errors='coerce') is not pd.NaT:
+                            date_cols.append((idx + 1, col))  # Excel 列从1开始
+                    except:
+                        continue
+                
+                # 为排产列中有数量的格子标黄
                 for row in range(3, max_row + 1):
-                    for col_idx, col_name in enumerate(df_scheduled.columns, 1):
+                    for col_idx, col_name in date_cols:
                         val = worksheet.cell(row=row, column=col_idx).value
                         if isinstance(val, (int, float)) and val > 0:
                             worksheet.cell(row=row, column=col_idx).fill = yellow_fill
