@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 from scheduler import schedule_sheet
+from openpyxl.utils import get_column_letter
+from openpyxl import load_workbook
 
 st.set_page_config(page_title="封装排产计划生成器", layout="wide")
 st.title("📦 委外封装排产软件")
