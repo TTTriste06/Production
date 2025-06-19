@@ -69,6 +69,14 @@ if uploaded_file:
                     max_len = max(df_scheduled[col].astype(str).map(len).max(), len(str(col)))
                     worksheet.column_dimensions[get_column_letter(i)].width = max_len + 10
 
+                # 给 A-W 区域 header 以下区域填淡蓝色背景
+                data_fill = PatternFill(fill_type="solid", fgColor="DCE6F1")
+                max_row = worksheet.max_row
+                for row in range(3, max_row + 1):
+                    for col in range(1, 24):  # A-W 即第1列到第23列
+                        worksheet.cell(row=row, column=col).fill = data_fill
+
+
 
             output.seek(0)
             st.download_button("📥 下载排产结果", data=output.getvalue(), file_name="排产计划结果.xlsx")
