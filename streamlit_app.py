@@ -35,6 +35,13 @@ if uploaded_file:
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
                 df_scheduled.to_excel(writer, sheet_name="排产计划", index=False)
+                worksheet = writer.book["排产计划"]
+                for i, col in enumerate(df_scheduled.columns, 1):
+                    max_len = max(df_scheduled[col].astype(str).map(len).max(), len(str(col)))
+                    worksheet.column_dimensions[get_column_letter(i)].width = max_len + 2
+            output.seek(0)
             st.download_button("📥 下载排产结果", data=output.getvalue(), file_name="排产计划结果.xlsx")
+
+               
         except ValueError as e:
             st.error(f"❌ 排产失败：{e}")
