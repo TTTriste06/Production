@@ -3,6 +3,7 @@ import pandas as pd
 from io import BytesIO
 from scheduler import schedule_sheet
 from openpyxl.utils import get_column_letter
+from openpyxl.styles import PatternFill, Font
 from openpyxl import load_workbook
 from datetime import datetime
 
@@ -59,6 +60,21 @@ if uploaded_file:
                 for i, col in enumerate(df_scheduled.columns, 1):
                     max_len = max(df_scheduled[col].astype(str).map(len).max(), len(str(col)))
                     worksheet.column_dimensions[get_column_letter(i)].width = max_len + 10
+
+            
+
+                # 设置第二行 header 为蓝底白字
+                header_fill = PatternFill(fill_type="solid", fgColor="4F81BD")  # 蓝色背景
+                header_font = Font(color="FFFFFF", bold=True)  # 白色字体加粗
+                for col_idx, col_name in enumerate(df_scheduled.columns, 1):
+                    cell = worksheet.cell(row=2, column=col_idx)
+                    cell.fill = header_fill
+                    cell.font = header_font
+
+                for i, col in enumerate(df_scheduled.columns, 1):
+                    max_len = max(df_scheduled[col].astype(str).map(len).max(), len(str(col)))
+                    worksheet.column_dimensions[get_column_letter(i)].width = max_len + 2
+
 
             output.seek(0)
             st.download_button("📥 下载排产结果", data=output.getvalue(), file_name="排产计划结果.xlsx")
