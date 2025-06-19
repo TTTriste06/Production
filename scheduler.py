@@ -64,8 +64,12 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
         for d, v in daily_output.items():
             out_row[d.strftime("%Y-%m-%d")] = v
 
-        out_row["预估开始测试日期"] = row["排产起始日"]
-        out_row["结束日期"] = max(daily_output.keys()) if daily_output else row["排产起始日"]
+        start_date = row["排产起始日"].strftime("%Y-%m-%d") if pd.notnull(row["排产起始日"]) else ""
+        end_date = max(daily_output.keys()).strftime("%Y-%m-%d") if daily_output else start_date
+        estimate_start = start_date
+
+        out_row["预估开始测试日期"] = estimate_start
+        out_row["结束日期"] = end_date
 
         reordered = {}
         for k in out_row:
