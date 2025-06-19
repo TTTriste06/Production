@@ -57,12 +57,6 @@ if uploaded_file:
                     except:
                         continue
 
-                for i, col in enumerate(df_scheduled.columns, 1):
-                    max_len = max(df_scheduled[col].astype(str).map(len).max(), len(str(col)))
-                    worksheet.column_dimensions[get_column_letter(i)].width = max_len + 10
-
-            
-
                 # 设置第二行 header 为蓝底白字
                 header_fill = PatternFill(fill_type="solid", fgColor="4F81BD")  # 蓝色背景
                 header_font = Font(color="FFFFFF", bold=True)  # 白色字体加粗
@@ -73,7 +67,7 @@ if uploaded_file:
 
                 for i, col in enumerate(df_scheduled.columns, 1):
                     max_len = max(df_scheduled[col].astype(str).map(len).max(), len(str(col)))
-                    worksheet.column_dimensions[get_column_letter(i)].width = max_len + 2
+                    worksheet.column_dimensions[get_column_letter(i)].width = max_len + 10
 
 
             output.seek(0)
