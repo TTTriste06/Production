@@ -5,9 +5,14 @@ from datetime import timedelta
 def convert_excel_date(val):
     if pd.isnull(val):
         return pd.NaT
-    if isinstance(val, (int, float)):
-        return pd.to_datetime("1899-12-30") + pd.to_timedelta(val, unit="D")
-    return pd.to_datetime(val, errors="coerce")
+    try:
+        if isinstance(val, str) and val.strip().isdigit():
+            val = float(val)
+        if isinstance(val, (int, float)):
+            return pd.to_datetime("1899-12-30") + pd.to_timedelta(val, unit="D")
+        return pd.to_datetime(val, errors="coerce")
+    except:
+        return pd.NaT
 
 def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
@@ -19,10 +24,10 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
     df["waferin"] = pd.to_datetime(df["waferin"], errors='coerce')
     df["实际开始测试日期"] = df["实际开始测试日期"].apply(convert_excel_date)
     st.write(df["实际开始测试日期"])
-    
+
     def compute_start_date(row):
         standard_start = row["waferin"] + timedelta(days=int(row["排产周期"]) + int(row["磨划周期"]) + int(row["封装周期"]))
-        if row["实际开始测试日期"] < standard_start:
+        if pd.notnull(row["实际开始测试日期"]) and row["实际开始测试日期"] < standard_start:
             return row["实际开始测试日期"]
         return standard_start
 
@@ -62,8 +67,19 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
         out_row = row.to_dict()
         for d, v in daily_output.items():
             out_row[d.strftime("%Y-%m-%d")] = v
-        out_row["排产完成总量"] = total_qty
         out_row["建议启动日期"] = min(daily_output.keys())
-        records.append(out_row)
+
+        # 将"建议启动日期"插入到"排产起始日"之后
+        reordered = {}
+        for k in out_row:
+            reordered[k] = out_row[k]
+            if k == "排产起始日":
+                reordered["建议启动日期"] = out_row["建议启动日期"]
+                break
+        for k in out_row:
+            if k not in reordered:
+                reordered[k] = out_row[k]
+
+        records.append(reordered)
 
     return pd.DataFrame(records)
