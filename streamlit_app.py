@@ -72,7 +72,7 @@ if uploaded_file:
                 # 给 A-W 区域 header 以下区域填淡蓝色背景
                 from openpyxl.styles import PatternFill
                 data_fill = PatternFill(fill_type="solid", fgColor="DCE6F1")
-                yellow_fill = PatternFill(fill_type="solid", fgColor="FFFFACD")
+                yellow_fill = PatternFill(fill_type="solid", fgColor="fffacd")
                 max_row = worksheet.max_row
                 for row in range(3, max_row + 1):
                     for col in range(1, 24):  # A-W 即第1列到第23列
