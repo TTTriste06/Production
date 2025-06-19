@@ -98,7 +98,7 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
         worksheet = writer.book["排产计划"]
         for i, col in enumerate(result_df.columns, 1):
             max_length = max(result_df[col].astype(str).map(len).max(), len(str(col)))
-            worksheet.column_dimensions[get_column_letter(i)].width = max_length + 10
+            worksheet.column_dimensions[get_column_letter(i)].width = max_length + 20
     output.seek(0)
     st.download_button("📥 下载排产结果（自动列宽）", data=output.getvalue(), file_name="排产计划结果.xlsx")
 
