@@ -33,9 +33,9 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
             return row["实际开始测试日期"]
         return row["waferin"] + timedelta(days=int(row["排产周期"]) + int(row["磨划周期"]) + int(row["封装周期"]))
 
-    df["排产起始日"] = df.apply(compute_start_date, axis=1)
+    df["预估开始测试日期"] = df.apply(compute_start_date, axis=1)
 
-    df.sort_values("排产起始日", inplace=True)
+    df.sort_values("预估开始测试日期", inplace=True)
 
     records = []
     capacity_tracker = {}
@@ -46,7 +46,7 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
         group = (row["封装厂"], row["封装形式"])
         max_daily = int(row["分配产能"])
 
-        date = row["排产起始日"]
+        date = row["预估开始测试日期"]
         remain = total_qty
         daily_output = {}
 
@@ -67,19 +67,19 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
         for d, v in daily_output.items():
             out_row[d.strftime("%Y-%m-%d")] = v
 
-        start_date = row["排产起始日"].strftime("%Y-%m-%d") if pd.notnull(row["排产起始日"]) else ""
+        start_date = row["预估开始测试日期"].strftime("%Y-%m-%d") if pd.notnull(row["预估开始测试日期"]) else ""
         end_date = max(daily_output.keys()).strftime("%Y-%m-%d") if daily_output else start_date
-        estimate_start = start_date
+        # estimate_start = start_date
 
-        out_row["预估开始测试日期"] = estimate_start
+        # out_row["预估开始测试日期"] = estimate_start
         out_row["结束日期"] = end_date
-        out_row["排产起始日"] = start_date
+        out_row["预估开始测试日期"] = start_date
 
         reordered = {}
         for k in out_row:
             reordered[k] = out_row[k]
-            if k == "排产起始日":
-                reordered["预估开始测试日期"] = out_row["预估开始测试日期"]
+            if k == "预估开始测试日期":
+                # reordered["预估开始测试日期"] = out_row["预估开始测试日期"]
                 reordered["结束日期"] = out_row["结束日期"]
                 break
         for k in out_row:
