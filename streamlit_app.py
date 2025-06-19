@@ -47,6 +47,11 @@ if uploaded_file:
                     try:
                         if pd.to_datetime(col_name, errors='coerce') is not pd.NaT:
                             weekday = pd.to_datetime(col_name).strftime('%A')
+                            weekday_map = {
+                                'Monday': '一', 'Tuesday': '二', 'Wednesday': '三',
+                                'Thursday': '四', 'Friday': '五', 'Saturday': '六', 'Sunday': '日'
+                            }
+                            weekday = weekday_map.get(weekday, weekday)
                             worksheet.cell(row=1, column=col_idx, value=weekday)
                     except:
                         continue
