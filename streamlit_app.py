@@ -70,12 +70,21 @@ if uploaded_file:
                     worksheet.column_dimensions[get_column_letter(i)].width = max_len + 10
 
                 # 给 A-W 区域 header 以下区域填淡蓝色背景
+                from openpyxl.styles import PatternFill
                 data_fill = PatternFill(fill_type="solid", fgColor="DCE6F1")
+                yellow_fill = PatternFill(fill_type="solid", fgColor="FFF2CC")
                 max_row = worksheet.max_row
                 for row in range(3, max_row + 1):
                     for col in range(1, 24):  # A-W 即第1列到第23列
-                        worksheet.cell(row=row, column=col).fill = data_fill
+                        cell = worksheet.cell(row=row, column=col)
+                        cell.fill = data_fill
 
+                # 为有排产数量的单元格添加浅黄色背景
+                for row in range(3, max_row + 1):
+                    for col_idx, col_name in enumerate(df_scheduled.columns, 1):
+                        val = worksheet.cell(row=row, column=col_idx).value
+                        if isinstance(val, (int, float)) and val > 0:
+                            worksheet.cell(row=row, column=col_idx).fill = yellow_fill
 
 
             output.seek(0)
