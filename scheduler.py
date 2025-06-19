@@ -90,16 +90,5 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
         records.append(reordered)
 
     result_df = pd.DataFrame(records)
-
-    # 自动列宽调整逻辑封装为 writer 后处理
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        result_df.to_excel(writer, index=False, sheet_name="排产计划")
-        worksheet = writer.book["排产计划"]
-        for i, col in enumerate(result_df.columns, 1):
-            max_length = max(result_df[col].astype(str).map(len).max(), len(str(col)))
-            worksheet.column_dimensions[get_column_letter(i)].width = max_length + 20
-    output.seek(0)
-    st.download_button("📥 下载排产结果（自动列宽）", data=output.getvalue(), file_name="排产计划结果.xlsx")
-
+    
     return result_df
