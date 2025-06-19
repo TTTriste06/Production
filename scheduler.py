@@ -2,6 +2,10 @@ import pandas as pd
 import streamlit as st
 from datetime import timedelta
 import re
+from io import BytesIO
+from openpyxl.utils import get_column_letter
+from openpyxl import load_workbook
+
 
 def convert_excel_date(val):
     if pd.isnull(val):
@@ -70,6 +74,7 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
 
         out_row["预估开始测试日期"] = estimate_start
         out_row["结束日期"] = end_date
+        out_row["排产起始日"] = start_date
 
         reordered = {}
         for k in out_row:
@@ -84,4 +89,17 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
 
         records.append(reordered)
 
-    return pd.DataFrame(records)
+    result_df = pd.DataFrame(records)
+
+    # 自动列宽调整逻辑封装为 writer 后处理
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        result_df.to_excel(writer, index=False, sheet_name="排产计划")
+        worksheet = writer.book["排产计划"]
+        for i, col in enumerate(result_df.columns, 1):
+            max_length = max(result_df[col].astype(str).map(len).max(), len(str(col)))
+            worksheet.column_dimensions[get_column_letter(i)].width = max_length + 10
+    output.seek(0)
+    st.download_button("📥 下载排产结果（自动列宽）", data=output.getvalue(), file_name="排产计划结果.xlsx")
+
+    return result_df
