@@ -58,7 +58,7 @@ if uploaded_file:
                         continue
 
                 # 设置第二行 header 为蓝底白字
-                header_fill = PatternFill(fill_type="solid", fgColor="b3c8e2")  # 蓝色背景
+                header_fill = PatternFill(fill_type="solid", fgColor="4f81bd")  # 蓝色背景
                 header_font = Font(color="FFFFFF", bold=True)  # 白色字体加粗
                 for col_idx, col_name in enumerate(df_scheduled.columns, 1):
                     cell = worksheet.cell(row=2, column=col_idx)
