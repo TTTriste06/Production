@@ -27,7 +27,6 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
 
     df["waferin"] = pd.to_datetime(df["waferin"], errors='coerce')
     df["实际开始测试日期"] = df["实际开始测试日期"].apply(convert_excel_date)
-    st.write(df["实际开始测试日期"])
 
     def compute_start_date(row):
         if pd.notnull(row["实际开始测试日期"]):
