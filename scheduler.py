@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 from datetime import timedelta
+import re
 
 def convert_excel_date(val):
     if pd.isnull(val):
@@ -20,24 +21,21 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
     if df["分配产能"].isnull().any():
         raise ValueError("部分产品缺少“分配产能”字段，请检查原始数据！")
 
-    # 转换日期字段，强制要求实际开始测试日期非空
     df["waferin"] = pd.to_datetime(df["waferin"], errors='coerce')
     df["实际开始测试日期"] = df["实际开始测试日期"].apply(convert_excel_date)
+    st.write(df["实际开始测试日期"])
 
     def compute_start_date(row):
-        standard_start = row["waferin"] + timedelta(days=int(row["排产周期"]) + int(row["磨划周期"]) + int(row["封装周期"]))
-        if pd.notnull(row["实际开始测试日期"]) and row["实际开始测试日期"] < standard_start:
+        if pd.notnull(row["实际开始测试日期"]):
             return row["实际开始测试日期"]
-        return standard_start
+        return row["waferin"] + timedelta(days=int(row["排产周期"]) + int(row["磨划周期"]) + int(row["封装周期"]))
 
     df["排产起始日"] = df.apply(compute_start_date, axis=1)
 
-    # 排序处理：按排产起始日从早到晚
     df.sort_values("排产起始日", inplace=True)
 
-    # 模拟产能分配过程
     records = []
-    capacity_tracker = {}  # {(封装厂, 封装形式, 日期): 已使用产能}
+    capacity_tracker = {}
 
     for _, row in df.iterrows():
         order_id = row["订单号"]
@@ -62,18 +60,19 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
 
             date += timedelta(days=1)
 
-        # 记录产出
         out_row = row.to_dict()
         for d, v in daily_output.items():
             out_row[d.strftime("%Y-%m-%d")] = v
-        out_row["建议启动日期"] = min(daily_output.keys())
 
-        # 将"建议启动日期"插入到"排产起始日"之后
+        out_row["预估开始测试日期"] = row["排产起始日"]
+        out_row["结束日期"] = max(daily_output.keys()) if daily_output else row["排产起始日"]
+
         reordered = {}
         for k in out_row:
             reordered[k] = out_row[k]
             if k == "排产起始日":
-                reordered["建议启动日期"] = out_row["建议启动日期"]
+                reordered["预估开始测试日期"] = out_row["预估开始测试日期"]
+                reordered["结束日期"] = out_row["结束日期"]
                 break
         for k in out_row:
             if k not in reordered:
