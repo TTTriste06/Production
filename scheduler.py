@@ -58,4 +58,12 @@ def schedule_sheet(df: pd.DataFrame) -> pd.DataFrame:
 
             date += timedelta(days=1)
 
+        # 记录产出
+        out_row = row.to_dict()
+        for d, v in daily_output.items():
+            out_row[d.strftime("%Y-%m-%d")] = v
+        out_row["排产完成总量"] = total_qty
+        out_row["建议启动日期"] = min(daily_output.keys())
+        records.append(out_row)
+
     return pd.DataFrame(records)
